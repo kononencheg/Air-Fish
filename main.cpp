@@ -6,63 +6,47 @@
  */
 
 #include <stdlib.h>
-
 #include <iostream>
 
-#include <octave/config.h>
-#include <octave/Matrix.h>
-#include <octave/ODEFunc.h>
-#include <octave/LSODE.h>
-
-Matrix A(2, 2);
-Matrix B(2, 1);
-
-double heaviside(double t) {
-	return t >= 0 ? 1.0 : 0.0;
-}
-
-ColumnVector stateEquation(const ColumnVector &x, double t) {
-	ColumnVector result(2);
-
-	for (int i = 0; i < x.length(); i++) {
-		float value = heaviside(t) * B(i, 0);
-
-		for (int j = 0; j < A.columns(); j++) {
-			value += A(i, j) * x(j);
-		}
-
-		result(i) = value;
-	}
-
-	return result;
-}
+#include "math/state_space.h"
+#include "math/step_signal.h"
 
 int main() {
-	A(0,0) = 1.0;
-	A(0,1) = 10.0;
-	A(1,0) = -1.0;
-	A(1,1) = -5.0;
+	Matrix A(2, 2);
+	Matrix B(2, 1);
+	Matrix C(2, 2);
 
-	B(0, 0) = 1.0;
-	B(1, 0) = 0.0;
+	A(0,0) = 1;
+	A(0,1) = 10;
+	A(1,0) = -1;
+	A(1,1) = -5;
 
-	ColumnVector t(100);
-	for (int i = 0; i < 100; i ++) {
-		t(i) = i * 0.1;
-	}
+	B(0, 0) = 1;
+
+	C(0, 1) = 0;
+	C(0, 0) = 1;
+	C(1, 1) = 1;
+	C(1, 0) = 0;
 
 	ColumnVector X0(2);
-	X0(0) = 0.0;
-	X0(1) = 0.0;
+	X0(0) = 1;
+	X0(1) = 0;
 
-	Matrix X;
+	StepSignal u;
+	StateSpace state;
 
-	ODEFunc solve(stateEquation);
+	state.setInitState(&X0);
+	state.setInputMatrix(&B);
+	state.setOutputMatrix(&C);
+	state.setStateMatrix(&A);
+	state.setInputSignal(&u);
 
-	LSODE ls(X0, 0.0, solve);
-	X = ls.do_integrate(t);
+	ColumnVector t(2000);
+	for (int i = 0; i < t.rows(); ++i) {
+		t(i) = i * 0.01;
+	}
 
-	std::cout << X;
+	std::cout << state.dispatch(t);
 
 	return EXIT_SUCCESS;
 }
