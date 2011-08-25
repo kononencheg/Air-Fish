@@ -41,7 +41,7 @@ int main() {
 	state.setStateMatrix(&A);
 	state.setInputSignal(&u);
 
-	ColumnVector t(2000);
+	ColumnVector t(200);
 	for (int i = 0; i < t.rows(); ++i) {
 		t(i) = i * 0.01;
 	}
