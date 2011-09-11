@@ -15,12 +15,12 @@
 #include <gsl/gsl_odeiv.h>
 
 typedef struct {
+	const gsl_vector *input_vector;
 	gsl_vector *state_vector;
-	gsl_vector *input_vector;
 	gsl_vector *output_vector;
 
-	gsl_matrix *state_matrix;
 	gsl_matrix *input_matrix;
+	gsl_matrix *state_matrix;
 	gsl_matrix *output_matrix;
 
 	size_t state_dim;
@@ -63,5 +63,8 @@ typedef struct {
 
 } af_state_space_signal_core;
 
+af_state_space_signal_core *af_state_space_signal_core_alloc(size_t state_dim,
+															 double step_size,
+															 af_state_space *state_space);
 
 #endif /* STATE_SPACE_H_ */

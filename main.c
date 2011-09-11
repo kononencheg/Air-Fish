@@ -31,36 +31,42 @@ int step_source(double t, const gsl_vector *input,
 int state_space(double t,
 				const gsl_vector *input,
 	  			gsl_vector *output,
-	  			af_signal_processor *processor,
-	  			af_signal_router *router) {
+	  			af_state_space_signal_core *state_space_core) {
+	  			//af_signal_processor *processor,
+	  			//af_signal_router *router) {
 
-	double time = t, step = router->step_size;
+	int result = GSL_FAILURE;
+	double time = t;
+	double step = 0.01;// router->step_size;
 
-	af_state_space_signal_core *state_space_core =
-			(af_state_space_signal_core *) processor->signal_core;
+	//af_state_space_signal_core *state_space_core =
+	///		(af_state_space_signal_core *) processor->signal_core;
 
 	af_state_space *state = state_space_core->state_space;
+	state->input_vector = input;
 
-	gsl_odeiv_evolve_apply(state_space_core->evolve,
-						   state_space_core->control,
-						   state_space_core->step,
-						   state_space_core->system,
-						   &time, time + step, &step,
-						   af_state_space_get_state_vector(state));
+	result = gsl_odeiv_evolve_apply(state_space_core->evolve,
+						   	   	    state_space_core->control,
+						   	   	    state_space_core->step,
+						   	   	    state_space_core->system,
+						   	   	    &time, time + step, &step,
+						   	   	    af_state_space_get_state_vector(state));
 
-	gsl_vector_set_all(state->output_vector, 0.0);
+	gsl_vector_set_all(state->output_vector, 0);
 
-	gsl_blas_dgemv(CblasNoTrans, 1.0,
+	gsl_blas_dgemv(CblasNoTrans, 1,
 				   state->output_matrix,
 				   state->state_vector,
-				   1.0, state->output_vector);
+				   0, state->output_vector);
 
 	output = state->output_vector;
 
-	return GSL_SUCCESS;
+	return result;
 }
 
 int main() {
+
+	double u[1] = { 1 };
 
 	const double A[] = { 1, 10,
 						-1, -5 };
@@ -72,16 +78,10 @@ int main() {
 
 	double X0[] = { 0, 0 };
 
-	double h = 1e-6;
 	double t = 0, t1 = 10.0;
 
 	af_state_space *state = af_state_space_alloc(2, 1, 1);
-
-	gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rk8pd, 2);
-	gsl_odeiv_control *control = gsl_odeiv_control_y_new(h, 0.0);
-	gsl_odeiv_evolve *evolve = gsl_odeiv_evolve_alloc(2);
-
-	gsl_odeiv_system sys = { af_state_space_function, NULL, 2, state };
+	af_state_space_signal_core *core = af_state_space_signal_core_alloc(2, 0.01, state);
 
 	af_state_space_set_state_matrix(state, A);
 	af_state_space_set_input_matrix(state, B);
@@ -89,34 +89,14 @@ int main() {
 
 	af_state_space_set_state_vector(state, X0);
 
-	printf("%f x %f\n", gsl_matrix_get(state->output_matrix, 0, 0), gsl_matrix_get(state->output_matrix, 0, 1));
-
+	gsl_vector_view in = gsl_vector_view_array(u, 1);
+	gsl_vector *out = gsl_vector_alloc(1);
 
 	while (t < t1) {
-		gsl_vector_set(state->input_vector, 0, 1);
-
-		h = 0.01;
-		int status = gsl_odeiv_evolve_apply(evolve, control, step, &sys, &t, t+h, &h, af_state_space_get_state_vector(state));
-
-		if (status != GSL_SUCCESS) {
-			break;
-		}
-
-		gsl_vector_set_all(state->output_vector, 0.0);
-
-
-		gsl_blas_dgemv(CblasNoTrans, 1.0,
-					   state->output_matrix,
-					   state->state_vector,
-					   1.0, state->output_vector);
-
-		printf("%.5f %.5f %.5f\n", t, h,
-				gsl_vector_get(state->output_vector, 0));
+		state_space(t, &in.vector, out, core);
+		printf("%.5f %.5f\n", t, gsl_vector_get(state->output_vector, 0));
+		t += 0.01;
 	}
-
-	gsl_odeiv_evolve_free(evolve);
-	gsl_odeiv_control_free(control);
-	gsl_odeiv_step_free(step);
 
 	af_state_space_free(state);
 

@@ -6,8 +6,10 @@
  */
 
 #include <stdlib.h>
+
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_odeiv.h>
 #include <gsl/gsl_vector.h>
 
 #include "af_state_space.h"
@@ -63,7 +65,6 @@ af_state_space *af_state_space_alloc(size_t state_dim,
 	state_space->output_matrix = gsl_matrix_alloc(output_dim, state_dim);
 
 	state_space->state_vector = gsl_vector_alloc(state_dim);
-	state_space->input_vector = gsl_vector_alloc(input_dim);
 	state_space->output_vector = gsl_vector_alloc(output_dim);
 
 	return state_space;
@@ -74,21 +75,21 @@ int af_state_space_function(double time,
 							double dfdt[],
 							void *params) {
 
-	af_state_space *state = (af_state_space *) params;
-	gsl_vector *temp = gsl_vector_alloc(state->state_dim);
+	af_state_space *state_space = (af_state_space *) params;
+	gsl_vector *temp = gsl_vector_alloc(state_space->state_dim);
 
 	gsl_vector_set_all(temp, 0.0);
-	af_state_space_set_state_vector(state, f);
+	af_state_space_set_state_vector(state_space, f);
 
 	gsl_blas_dgemv(CblasNoTrans, 1.0,
-				   state->input_matrix,
-				   state->input_vector,
+				   state_space->input_matrix,
+				   state_space->input_vector,
 				   1.0, temp);
 
 	gsl_blas_dgemv(CblasNoTrans, 1.0,
-				  state->state_matrix,
-				  state->state_vector,
-				  1.0, temp);
+				   state_space->state_matrix,
+				   state_space->state_vector,
+				   1.0, temp);
 
 	dfdt[0] = gsl_vector_get(temp, 0);
 	dfdt[1] = gsl_vector_get(temp, 1);
@@ -104,14 +105,12 @@ double *af_state_space_get_state_vector(af_state_space *state_space) {
 	return extract_vector(state_space->state_vector);
 }
 
-
 void af_state_space_set_state_matrix(af_state_space *state_space, const double data[]) {
 	populate_matrix(state_space->state_matrix, data);
 }
 
 void af_state_space_set_input_matrix(af_state_space *state_space, const double data[]) {
 	populate_matrix(state_space->input_matrix, data);
-
 }
 
 void af_state_space_set_output_matrix(af_state_space *state_space, const double data[]) {
@@ -124,10 +123,30 @@ void af_state_space_free(af_state_space* state_space) {
 	gsl_matrix_free(state_space->output_matrix);
 
 	gsl_vector_free(state_space->state_vector);
-	gsl_vector_free(state_space->input_vector);
 	gsl_vector_free(state_space->output_vector);
 
 	free(state_space);
 }
 
+
+af_state_space_signal_core *af_state_space_signal_core_alloc(size_t state_dim,
+															 double step_size,
+															 af_state_space *state_space) {
+
+	af_state_space_signal_core *signal_core = (af_state_space_signal_core *)
+			malloc(sizeof(af_state_space_signal_core));
+
+	signal_core->system = (gsl_odeiv_system *) malloc(sizeof(gsl_odeiv_system));
+	signal_core->system->function = af_state_space_function;
+	signal_core->system->dimension = state_dim;
+	signal_core->system->params = state_space;
+
+	signal_core->step = gsl_odeiv_step_alloc(gsl_odeiv_step_rk8pd, state_dim);
+	signal_core->control = gsl_odeiv_control_y_new(step_size, 0.0);
+	signal_core->evolve = gsl_odeiv_evolve_alloc(state_dim);
+
+	signal_core->state_space = state_space;
+
+	return signal_core;
+}
 
