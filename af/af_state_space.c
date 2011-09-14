@@ -133,8 +133,8 @@ af_state_space_signal_core *af_state_space_signal_core_alloc(size_t state_dim,
 															 double step_size,
 															 af_state_space *state_space) {
 
-	af_state_space_signal_core *signal_core = (af_state_space_signal_core *)
-			malloc(sizeof(af_state_space_signal_core));
+	af_state_space_signal_core *signal_core =
+			(af_state_space_signal_core *) malloc(sizeof(af_state_space_signal_core));
 
 	signal_core->system = (gsl_odeiv_system *) malloc(sizeof(gsl_odeiv_system));
 	signal_core->system->function = af_state_space_function;

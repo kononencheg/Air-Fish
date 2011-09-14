@@ -16,31 +16,24 @@
 
 #include "af/af_state_space.h"
 #include "af/af_signal_processor.h"
+#include "af/af_source_signals.h"
 #include "af/af_signal_router.h"
 
-int step_source(double t, const gsl_vector *input,
-			  	gsl_vector *output, af_signal_processor *processor) {
+#define TIME_STEP (0.01)
 
-	double treshold = *(double *) processor->signal_core;
-
-	gsl_vector_set(output, 0, t >= treshold ? 1 : 0);
-
-	return GSL_SUCCESS; //GSL_ERANGE
-}
-
-int state_space(double t,
-				const gsl_vector *input,
+/*
+int state_space(const gsl_vector *input,
 	  			gsl_vector *output,
-	  			af_state_space_signal_core *state_space_core) {
-	  			//af_signal_processor *processor,
-	  			//af_signal_router *router) {
+	  			af_signal_processor *processor,
+	  			af_signal_router *router) {
 
 	int result = GSL_FAILURE;
-	double time = t;
-	double step = 0.01;// router->step_size;
 
-	//af_state_space_signal_core *state_space_core =
-	///		(af_state_space_signal_core *) processor->signal_core;
+	double time = router->time,
+		   step = router->step_size;
+
+	af_state_space_signal_core *state_space_core =
+			(af_state_space_signal_core *) processor->signal_core;
 
 	af_state_space *state = state_space_core->state_space;
 	state->input_vector = input;
@@ -62,11 +55,11 @@ int state_space(double t,
 	output = state->output_vector;
 
 	return result;
-}
+}*/
 
 int main() {
 
-	double u[1] = { 1 };
+	/*double u[1] = { 1 };
 
 	const double A[] = { 1, 10,
 						-1, -5 };
@@ -78,9 +71,23 @@ int main() {
 
 	double X0[] = { 0, 0 };
 
-	double t = 0, t1 = 10.0;
+	double t = 0, t1 = 10.0;*/
 
-	af_state_space *state = af_state_space_alloc(2, 1, 1);
+	af_signal_router *router = af_signal_router_alloc(0.01, 0);
+	af_signal_processor *step_signal = af_signal_processor_alloc(1);
+
+	af_heaviside_step_signal_core *step_core =
+			af_heaviside_step_signal_core_alloc(0);
+
+	af_signal_processor_set_core(step_signal, step_core);
+	af_signal_processor_set_handler(step_signal, af_heaviside_step_function);
+	af_signal_processor_set_router(step_signal, router);
+
+	af_signal_processor_apply(step_signal, NULL);
+
+	printf("%.5f\n", gsl_vector_get(step_signal->output_vector, 0));
+
+	/*af_state_space *state = af_state_space_alloc(2, 1, 1);
 	af_state_space_signal_core *core = af_state_space_signal_core_alloc(2, 0.01, state);
 
 	af_state_space_set_state_matrix(state, A);
@@ -99,7 +106,7 @@ int main() {
 	}
 
 	af_state_space_free(state);
+	*/
 
 	return EXIT_SUCCESS;
 }
-
