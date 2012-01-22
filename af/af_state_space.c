@@ -98,23 +98,28 @@ int af_state_space_function(double time,
 	return GSL_SUCCESS;
 }
 
-void af_state_space_set_state_vector(af_state_space *state_space, const double data[]) {
+void af_state_space_set_state_vector(af_state_space * const state_space,
+									 const double data[]) {
 	populate_vector(state_space->state_vector, data);
 }
 
-double *af_state_space_get_state_vector(af_state_space *state_space) {
+double *af_state_space_get_state_vector(const af_state_space *
+										const state_space) {
 	return extract_vector(state_space->state_vector);
 }
 
-void af_state_space_set_state_matrix(af_state_space *state_space, const double data[]) {
+void af_state_space_set_state_matrix(af_state_space * const state_space,
+									 const double data[]) {
 	populate_matrix(state_space->state_matrix, data);
 }
 
-void af_state_space_set_input_matrix(af_state_space *state_space, const double data[]) {
+void af_state_space_set_input_matrix(af_state_space * const state_space,
+									 const double data[]) {
 	populate_matrix(state_space->input_matrix, data);
 }
 
-void af_state_space_set_output_matrix(af_state_space *state_space, const double data[]) {
+void af_state_space_set_output_matrix(af_state_space * const state_space,
+									  const double data[]) {
 	populate_matrix(state_space->output_matrix, data);
 }
 

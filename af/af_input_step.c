@@ -23,13 +23,13 @@ void af_input_step_params_free(af_input_step_params *params) {
 	free(params);
 }
 
-int af_input_step_function(af_signal_block *block) {
+int af_input_step_function(af_signal_block * const block) {
 	af_input_step_params *params = (af_input_step_params *) block->params;
 
 	gsl_vector_set(block->output_vector, 0,
 				   block->router->time >= params->shift ? 1 : 0);
 
-	return GSL_SUCCESS; //GSL_ERANGE
+	return GSL_SUCCESS;
 }
 
 

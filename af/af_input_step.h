@@ -21,7 +21,7 @@ af_input_step_params *af_input_step_params_alloc(double shift);
 
 void af_input_step_params_free(af_input_step_params *params);
 
-int af_input_step_function(af_signal_block *block);
+int af_input_step_function(af_signal_block * const block);
 
 
 #endif /* AF_INPUT_HEAVISIDE_STEP_H_ */

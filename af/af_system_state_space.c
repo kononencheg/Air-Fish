@@ -12,7 +12,7 @@
 #include <gsl/gsl_blas.h>
 
 af_system_state_space_params *af_system_state_space_params_alloc
-	(size_t state_dim, double step_size, af_state_space *state_space) {
+	(size_t state_dim, double step_size, af_state_space * const state_space) {
 
 	af_system_state_space_params *params = (af_system_state_space_params *)
 			malloc(sizeof(af_system_state_space_params));
@@ -35,7 +35,7 @@ void af_system_state_space_params_free(af_system_state_space_params *params) {
 
 }
 
-int af_system_state_space_function(af_signal_block *block) {
+int af_system_state_space_function(af_signal_block * const block) {
 	int result = GSL_FAILURE;
 
 	double time = block->router->time, // TODO: Try 0!

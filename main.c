@@ -38,14 +38,14 @@ int main() {
 	const double A[] = { 1, 10,
 						-1, -5 };
 
-	const double B[] = { 0,
+	const double B[] = { 1,
 				   	   	 1 };
 
 	const double C[] = { 0, 1 };
 
 	double X0[] = { 0, 0 };
 
-	af_signal_router *router = af_signal_router_alloc(0.00001, 0);
+	af_signal_router *router = af_signal_router_alloc(0.1, 0);
 
 	af_state_space *st = create_state_space(A, B, C, X0);
 
