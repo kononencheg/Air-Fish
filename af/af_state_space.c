@@ -66,6 +66,7 @@ af_state_space *af_state_space_alloc(size_t state_dim,
 
 	state_space->state_vector = gsl_vector_alloc(state_dim);
 	state_space->output_vector = gsl_vector_alloc(output_dim);
+	state_space->input_vector = NULL;
 
 	return state_space;
 }
@@ -126,27 +127,5 @@ void af_state_space_free(af_state_space* state_space) {
 	gsl_vector_free(state_space->output_vector);
 
 	free(state_space);
-}
-
-
-af_state_space_signal_core *af_state_space_signal_core_alloc(size_t state_dim,
-															 double step_size,
-															 af_state_space *state_space) {
-
-	af_state_space_signal_core *signal_core =
-			(af_state_space_signal_core *) malloc(sizeof(af_state_space_signal_core));
-
-	signal_core->system = (gsl_odeiv_system *) malloc(sizeof(gsl_odeiv_system));
-	signal_core->system->function = af_state_space_function;
-	signal_core->system->dimension = state_dim;
-	signal_core->system->params = state_space;
-
-	signal_core->step = gsl_odeiv_step_alloc(gsl_odeiv_step_rk8pd, state_dim);
-	signal_core->control = gsl_odeiv_control_y_new(step_size, 0.0);
-	signal_core->evolve = gsl_odeiv_evolve_alloc(state_dim);
-
-	signal_core->state_space = state_space;
-
-	return signal_core;
 }
 

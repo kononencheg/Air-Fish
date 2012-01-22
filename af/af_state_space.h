@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
-#include <gsl/gsl_odeiv.h>
 
 typedef struct {
 	const gsl_vector *input_vector;
@@ -52,19 +51,5 @@ void af_state_space_set_output_matrix(af_state_space *state_space,
 
 void af_state_space_free(af_state_space* state_space);
 
-
-typedef struct {
-	gsl_odeiv_step *step;
-	gsl_odeiv_control *control;
-	gsl_odeiv_evolve *evolve;
-	gsl_odeiv_system *system;
-
-	af_state_space *state_space;
-
-} af_state_space_signal_core;
-
-af_state_space_signal_core *af_state_space_signal_core_alloc(size_t state_dim,
-															 double step_size,
-															 af_state_space *state_space);
 
 #endif /* STATE_SPACE_H_ */
