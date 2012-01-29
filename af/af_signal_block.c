@@ -6,6 +6,7 @@
  */
 
 #include "af_signal_block.h"
+#include "af_signal_router.h"
 
 // signal block
 
@@ -17,11 +18,16 @@ af_signal_block *af_signal_block_alloc(size_t input_size, size_t output_dim) {
 	block->params = NULL;
 	block->handler = NULL;
 	block->router = NULL;
+	block->is_clear = 1;
 
 	block->input = af_signal_block_input_alloc(input_size);
-	block->output_vector = gsl_vector_alloc(output_dim);
 
-	gsl_vector_set_all(block->output_vector, 0);
+	if (output_dim == 0) {
+		block->output_vector = NULL;
+	} else {
+		block->output_vector = gsl_vector_alloc(output_dim);
+		gsl_vector_set_all(block->output_vector, 0);
+	}
 
 	return block;
 }
@@ -40,23 +46,34 @@ void af_signal_block_set_params(af_signal_block * const block,
 								const void * params) {
 	block->params = params;
 }
-
-void af_signal_block_apply(af_signal_block * const block) {
-	size_t length = block->input->length;
-	size_t size = block->input->size;
-
-	if (length == size) {
-		block->handler(block);
+void af_signal_block_add_source_at(const af_signal_block * const block,
+	 							   af_signal_block * const source,
+	 							   const size_t index) {
+	size_t size = block->input->size;			
+	 							   
+	if (index < size) {
+		block->input->sources[index] = source;
 	} else {
-		fprintf(stderr, "Incomplete block input: has %d of %d\n", length, size);
+		fprintf(stderr, "Index is out of bounds: %d of %d\n", index, size);
 	}
-
-	af_signal_block_input_reset(block->input);
 }
 
-af_signal_block_input * const af_signal_block_get_input
-	(af_signal_block * const block) {
-	return block->input;
+void af_signal_block_process(af_signal_block * const block) {
+	af_signal_block_input_update(block->input);
+
+	block->handler(block);
+}
+
+short int af_signal_block_is_clear(af_signal_block * const block) {
+	int is_clear = block->is_clear;
+	block->is_clear = 0;
+
+	return is_clear;
+}
+
+void af_signal_block_reset(af_signal_block * const block) {
+	af_signal_block_input_reset(block->input);
+	block->is_clear = 1;
 }
 
 void af_signal_block_free(af_signal_block *block) {
@@ -68,30 +85,27 @@ void af_signal_block_free(af_signal_block *block) {
 // signal block input
 
 af_signal_block_input *af_signal_block_input_alloc(size_t size) {
+	size_t i = 0;
+
 	af_signal_block_input *input =
 		(af_signal_block_input *) malloc(sizeof(af_signal_block_input));
 
 	input->input_vectors =
 			(const gsl_vector **) malloc(size * sizeof(gsl_vector));
 
-	input->size = size;
-	input->length = 0;
+	input->sources =
+			(af_signal_block **) malloc(size * sizeof(af_signal_block));
 
-	af_signal_block_input_reset(input);
+	input->size = size;
+
+	while (i < size) {
+		input->input_vectors[i] = NULL;
+		input->sources[i] = NULL;
+
+		i++;
+	}
 
 	return input;
-}
-
-void af_signal_block_input_add_vector(af_signal_block_input * const input,
-									  const gsl_vector * const vector) {
-
-	if (input->length < input->size) {
-		input->input_vectors[input->length] = vector;
-		input->length++;
-	} else {
-		fprintf(stderr, "Block input overflow: add %d of %d\n",
-				input->length, input->size);
-	}
 }
 
 const gsl_vector * const af_signal_block_input_get_vector_at
@@ -99,9 +113,29 @@ const gsl_vector * const af_signal_block_input_get_vector_at
 	return input->input_vectors[index];
 }
 
-void af_signal_block_input_reset(af_signal_block_input *input) {
-	while (input->length > 0) {
-		input->input_vectors[--input->length] = NULL;
+void af_signal_block_input_update(af_signal_block_input * const input) {
+	const af_signal_block * source = NULL;
+
+	size_t i = 0;
+	while (i < input->size) {
+		source = input->sources[i];
+
+		if (source != NULL) {
+			input->input_vectors[i] = source->output_vector;
+		} else {
+			fprintf(stderr, "Source doesn't set: %d\n", i);
+		}
+
+		i++;
+	}
+}
+
+void af_signal_block_input_reset(af_signal_block_input * const input) {
+	size_t i = 0;
+	while (i < input->size) {
+		input->input_vectors[i] = NULL;
+
+		i++;
 	}
 }
 

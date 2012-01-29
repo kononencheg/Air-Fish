@@ -28,9 +28,10 @@ air-fish : main.o af_input_step.o \
 	   	  $(addprefix $(BUILD_DIR)/, $^) \
 	   	  $(addprefix -l, $(LIBS)) 
 
-%.o : %.c 
+%.o : %.c
+	
 	$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) -c $< 
 
 clean :
-	rm -rf $(BUILD_DIR)/*.o
 	
+	rm -rf $(BUILD_DIR)/*.*

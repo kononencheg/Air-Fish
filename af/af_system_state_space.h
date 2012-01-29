@@ -12,8 +12,8 @@
 #include <gsl/gsl_odeiv.h>
 #include <gsl/gsl_vector.h>
 
-#include "af_signal_block.h"
 #include "af_state_space.h"
+#include "af_signal_block.h"
 
 typedef struct {
 	gsl_odeiv_step *step;

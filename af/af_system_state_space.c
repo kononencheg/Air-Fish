@@ -7,6 +7,7 @@
 
 #include "af_system_state_space.h"
 
+#include "af_signal_router.h"
 #include "af_signal_block.h"
 
 #include <gsl/gsl_blas.h>
