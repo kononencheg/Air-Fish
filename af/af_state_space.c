@@ -58,14 +58,13 @@ af_state_space *af_state_space_alloc(size_t state_dim,
 
 	state_space->state_dim  = state_dim;
 	state_space->input_dim  = input_dim;
-	state_space->output_dim = output_dim;
 
 	state_space->state_matrix  = gsl_matrix_alloc(state_dim, state_dim);
 	state_space->input_matrix  = gsl_matrix_alloc(state_dim, input_dim);
 	state_space->output_matrix = gsl_matrix_alloc(output_dim, state_dim);
 
 	state_space->state_vector = gsl_vector_alloc(state_dim);
-	state_space->output_vector = gsl_vector_alloc(output_dim);
+
 	state_space->input_vector = NULL;
 
 	return state_space;
@@ -129,7 +128,6 @@ void af_state_space_free(af_state_space* state_space) {
 	gsl_matrix_free(state_space->output_matrix);
 
 	gsl_vector_free(state_space->state_vector);
-	gsl_vector_free(state_space->output_vector);
 
 	free(state_space);
 }

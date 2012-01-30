@@ -16,7 +16,6 @@
 typedef struct {
 	const gsl_vector *input_vector;
 	gsl_vector *state_vector;
-	gsl_vector *output_vector;
 
 	gsl_matrix *input_matrix;
 	gsl_matrix *state_matrix;
@@ -24,7 +23,6 @@ typedef struct {
 
 	size_t state_dim;
 	size_t input_dim;
-	size_t output_dim;
 
 } af_state_space;
 
