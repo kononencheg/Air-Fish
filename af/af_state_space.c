@@ -56,9 +56,6 @@ af_state_space *af_state_space_alloc(size_t state_dim,
 
 	af_state_space *state_space = (af_state_space *) malloc(sizeof(af_state_space));
 
-	state_space->state_dim  = state_dim;
-	state_space->input_dim  = input_dim;
-
 	state_space->state_matrix  = gsl_matrix_alloc(state_dim, state_dim);
 	state_space->input_matrix  = gsl_matrix_alloc(state_dim, input_dim);
 	state_space->output_matrix = gsl_matrix_alloc(output_dim, state_dim);
@@ -76,7 +73,7 @@ int af_state_space_function(double time,
 							void *params) {
 
 	af_state_space *state_space = (af_state_space *) params;
-	gsl_vector *temp = gsl_vector_alloc(state_space->state_dim);
+	gsl_vector *temp = gsl_vector_alloc(state_space->state_matrix->size1);
 
 	gsl_vector_set_all(temp, 0.0);
 	af_state_space_set_state_vector(state_space, f);
@@ -93,6 +90,8 @@ int af_state_space_function(double time,
 
 	dfdt[0] = gsl_vector_get(temp, 0);
 	dfdt[1] = gsl_vector_get(temp, 1);
+
+	gsl_vector_free(temp);
 
 	return GSL_SUCCESS;
 }

@@ -21,9 +21,6 @@ typedef struct {
 	gsl_matrix *state_matrix;
 	gsl_matrix *output_matrix;
 
-	size_t state_dim;
-	size_t input_dim;
-
 } af_state_space;
 
 af_state_space *af_state_space_alloc(size_t state_dim,

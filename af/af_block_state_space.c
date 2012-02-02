@@ -19,16 +19,16 @@ af_block_state_space_params *af_block_state_space_params_alloc
 	af_block_state_space_params *params = (af_block_state_space_params *)
 			malloc(sizeof(af_block_state_space_params));
 
+	size_t state_dim = state_space->state_matrix->size1;
+
 	params->system = (gsl_odeiv_system *) malloc(sizeof(gsl_odeiv_system));
 	params->system->function = af_state_space_function;
-	params->system->dimension = state_space->state_dim;
+	params->system->dimension = state_dim;
 	params->system->params = state_space;
 
-	params->step = gsl_odeiv_step_alloc
-			(gsl_odeiv_step_rk8pd, state_space->state_dim);
-
+	params->step = gsl_odeiv_step_alloc(gsl_odeiv_step_rk8pd, state_dim);
 	params->control = gsl_odeiv_control_y_new(step_size, 0.0);
-	params->evolve = gsl_odeiv_evolve_alloc(state_space->state_dim);
+	params->evolve = gsl_odeiv_evolve_alloc(state_dim);
 
 	params->state_space = state_space;
 
