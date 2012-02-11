@@ -61,8 +61,6 @@ int af_block_state_space_function(af_block * const block) {
 	gsl_blas_dgemv(CblasNoTrans, 1, system->output_matrix,
 				   system->state_vector, 0, block->output->vector);
 
-	//block->output->vector = system->output_vector;
-
 	return result;
 }
 

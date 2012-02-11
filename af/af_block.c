@@ -45,6 +45,7 @@ void af_block_set_params(af_block * const block,
 								const void * params) {
 	block->params = params;
 }
+
 void af_block_add_source_at(const af_block * const block,
 	 							   af_block * const source,
 	 							   const size_t index) {

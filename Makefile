@@ -18,11 +18,15 @@ VPATH = af
 
 all : air-fish
 	
-air-fish : main.o af_block_step.o \
-				  af_block.o \
+air-fish : main.o \
 				  af_router.o \
 				  af_state_space.o \
+				  af_step_response.o \
+				  af_block.o \
+				  af_block_step.o \
+				  af_block_feedback.o \
 				  af_block_state_space.o \
+				  af_block_step_response.o \
 				  
 	$(CC) $(LINK_FLAGS) -o $(BUILD_DIR)/$@ \
 	   	  $(addprefix $(BUILD_DIR)/, $^) \

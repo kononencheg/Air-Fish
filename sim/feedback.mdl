@@ -6,11 +6,22 @@ Model {
     NumRootInports	    0
     NumRootOutports	    0
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.3"
+    ComputedModelVersion    "1.5"
     NumModelReferences	    0
     NumTestPointedSignals   0
   }
   SavedCharacterEncoding  "UTF-8"
+  slprops.hdlmdlprops {
+    $PropName		    "HDLParams"
+    $ObjectID		    1
+    Array {
+      Type		      "Cell"
+      Dimension		      2
+      Cell		      "HDLSubsystem"
+      Cell		      "feedback"
+      PropName		      "mdlProps"
+    }
+  }
   SaveDefaultBlockParams  on
   ScopeRefreshTime	  0.035000
   OverrideScopeRefreshTime on
@@ -26,9 +37,9 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "kononencheg"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Sun Jan 22 23:28:06 2012"
-  RTWModifiedTimeStamp	  249171244
-  ModelVersionFormat	  "1.%<AutoIncrement:3>"
+  LastModifiedDate	  "Sat Feb 11 19:37:55 2012"
+  RTWModifiedTimeStamp	  250889475
+  ModelVersionFormat	  "1.%<AutoIncrement:5>"
   ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -62,11 +73,11 @@ Model {
   TryForcingSFcnDF	  off
   Object {
     $PropName		    "DataLoggingOverride"
-    $ObjectID		    1
+    $ObjectID		    2
     $ClassName		    "Simulink.SimulationData.ModelLoggingInfo"
     model_		    "feedback"
     signals_		    []
-    overrideMode_	    [0U]
+    overrideMode_	    [0.0]
     Array {
       Type		      "Cell"
       Dimension		      1
@@ -122,18 +133,18 @@ Model {
     Type		    "Handle"
     Dimension		    1
     Simulink.ConfigSet {
-      $ObjectID		      2
+      $ObjectID		      3
       Version		      "1.11.0"
       Array {
 	Type			"Handle"
 	Dimension		9
 	Simulink.SolverCC {
-	  $ObjectID		  3
+	  $ObjectID		  4
 	  Version		  "1.11.0"
 	  StartTime		  "0.0"
-	  StopTime		  "10.0"
+	  StopTime		  "10"
 	  AbsTol		  "auto"
-	  FixedStep		  "auto"
+	  FixedStep		  "0.01"
 	  InitialStep		  "auto"
 	  MaxNumMinSteps	  "-1"
 	  MaxOrder		  5
@@ -148,8 +159,8 @@ Model {
 	  RelTol		  "1e-3"
 	  SolverMode		  "Auto"
 	  ConcurrentTasks	  off
-	  Solver		  "ode45"
-	  SolverName		  "ode45"
+	  Solver		  "ode4"
+	  SolverName		  "ode4"
 	  SolverJacobianMethodControl "auto"
 	  ShapePreserveControl	  "DisableAll"
 	  ZeroCrossControl	  "UseLocalSettings"
@@ -162,7 +173,7 @@ Model {
 	  InsertRTBMode		  "Whenever possible"
 	}
 	Simulink.DataIOCC {
-	  $ObjectID		  4
+	  $ObjectID		  5
 	  Version		  "1.11.0"
 	  Decimation		  "1"
 	  ExternalInput		  "[t, u]"
@@ -194,7 +205,7 @@ Model {
 	  Refine		  "1"
 	}
 	Simulink.OptimizationCC {
-	  $ObjectID		  5
+	  $ObjectID		  6
 	  Version		  "1.11.0"
 	  Array {
 	    Type		    "Cell"
@@ -249,7 +260,7 @@ Model {
 	  AccelParallelForEachSubsystem	on
 	}
 	Simulink.DebuggingCC {
-	  $ObjectID		  6
+	  $ObjectID		  7
 	  Version		  "1.11.0"
 	  RTPrefix		  "error"
 	  ConsistencyChecking	  "none"
@@ -335,7 +346,7 @@ Model {
 	  SFTransitionOutsideNaturalParentDiag "warning"
 	}
 	Simulink.HardwareCC {
-	  $ObjectID		  7
+	  $ObjectID		  8
 	  Version		  "1.11.0"
 	  ProdBitPerChar	  8
 	  ProdBitPerShort	  16
@@ -372,7 +383,7 @@ Model {
 	  ProdEqTarget		  on
 	}
 	Simulink.ModelReferenceCC {
-	  $ObjectID		  8
+	  $ObjectID		  9
 	  Version		  "1.11.0"
 	  UpdateModelReferenceTargets "IfOutOfDateOrStructuralChange"
 	  CheckModelReferenceTargetMessage "error"
@@ -387,7 +398,7 @@ Model {
 	  SupportModelReferenceSimTargetCustomCode off
 	}
 	Simulink.SFSimCC {
-	  $ObjectID		  9
+	  $ObjectID		  10
 	  Version		  "1.11.0"
 	  SFSimEnableDebug	  on
 	  SFSimOverflowDetection  on
@@ -402,7 +413,7 @@ Model {
 	}
 	Simulink.RTWCC {
 	  $BackupClass		  "Simulink.RTWCC"
-	  $ObjectID		  10
+	  $ObjectID		  11
 	  Version		  "1.11.0"
 	  Array {
 	    Type		    "Cell"
@@ -455,7 +466,7 @@ Model {
 	    Type		    "Handle"
 	    Dimension		    2
 	    Simulink.CodeAppCC {
-	      $ObjectID		      11
+	      $ObjectID		      12
 	      Version		      "1.11.0"
 	      Array {
 		Type			"Cell"
@@ -520,7 +531,7 @@ Model {
 	    }
 	    Simulink.GRTTargetCC {
 	      $BackupClass	      "Simulink.TargetCC"
-	      $ObjectID		      12
+	      $ObjectID		      13
 	      Version		      "1.11.0"
 	      Array {
 		Type			"Cell"
@@ -603,7 +614,7 @@ Model {
 	  }
 	}
 	hdlcoderui.hdlcc {
-	  $ObjectID		  13
+	  $ObjectID		  14
 	  Version		  "1.11.0"
 	  Description		  "HDL Coder custom configuration component"
 	  Name			  "HDL Coder"
@@ -619,13 +630,13 @@ Model {
       }
       Name		      "Configuration"
       CurrentDlgPage	      "Solver"
-      ConfigPrmDlgPosition     [ 520, 225, 1400, 855 ] 
+      ConfigPrmDlgPosition     [ 476, -14, 1436, 816 ] 
     }
     PropName		    "ConfigurationSets"
   }
   Simulink.ConfigSet {
     $PropName		    "ActiveConfigurationSet"
-    $ObjectID		    2
+    $ObjectID		    3
   }
   BlockDefaults {
     ForegroundColor	    "black"
@@ -737,9 +748,10 @@ Model {
       Ports		      [1]
       Position		      [505, 384, 535, 416]
       Floating		      off
-      Location		      [468, 481, 794, 720]
+      Location		      [608, 387, 934, 626]
       Open		      off
       NumInputPorts	      "1"
+      ZoomMode		      "yonly"
       List {
 	ListType		AxesTitles
 	axes1			"%<SignalLabel>"
@@ -752,8 +764,8 @@ Model {
       Name		      "State-Space"
       SID		      "2"
       Position		      [245, 383, 305, 417]
-      A			      "[1 10; -1 -5]"
-      B			      "[0; 1]"
+      A			      "[0 -5; 1 -10]"
+      B			      "[1; 0]"
       C			      "[0, 1]"
       D			      "[0]"
     }
