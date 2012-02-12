@@ -18,15 +18,23 @@ VPATH = af
 
 all : air-fish
 	
-air-fish : main.o \
-				  af_router.o \
-				  af_state_space.o \
-				  af_step_response.o \
-				  af_block.o \
-				  af_block_step.o \
-				  af_block_feedback.o \
-				  af_block_state_space.o \
-				  af_block_step_response.o \
+air-fish : 	main.o \
+			af_block_demux.o \
+			af_block_gain.o \
+			af_block_mux.o \
+			af_block_print.o \
+			af_block_state_space.o \
+			af_block_step_response.o \
+			af_block_step.o \
+			af_block_sum.o \
+			af_block.o \
+			af_evolution_algorithm.o \
+			af_evolution_individual.o \
+			af_evolution_population.o \
+			af_router.o \
+			af_state_space.o \
+			af_step_response.o \
+				  
 				  
 	$(CC) $(LINK_FLAGS) -o $(BUILD_DIR)/$@ \
 	   	  $(addprefix $(BUILD_DIR)/, $^) \

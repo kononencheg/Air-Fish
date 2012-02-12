@@ -31,13 +31,15 @@ typedef struct _af_step_response {
 af_step_response *af_step_response_alloc(size_t size, double error_ratio);
 
 void af_step_response_add_value(af_step_response * response,
-								double time, double value);
+								const double time, double value);
 
 double af_step_response_get_steady_value(af_step_response * response);
 
 double af_step_response_get_overshoot(af_step_response * response);
 
 double af_step_response_get_settling_time(af_step_response * response);
+
+void af_step_response_reset(af_step_response * response);
 
 void af_step_response_free(af_step_response * response);
 

@@ -44,6 +44,8 @@ void af_state_space_set_input_matrix(af_state_space * const state_space,
 void af_state_space_set_output_matrix(af_state_space * const state_space,
 									  const double data[]);
 
+void af_state_space_reset(af_state_space* state_space);
+
 void af_state_space_free(af_state_space* state_space);
 
 

@@ -17,14 +17,14 @@ struct _af_block;
 struct _af_block_input;
 struct _af_block_output;
 
-typedef int (* af_block_handler) (struct _af_block * const block);
+typedef int (* af_block_function) (struct _af_block * const block);
 
 // signal block
 
 typedef struct _af_block {
     const void * params;
 
-    af_block_handler handler;
+    af_block_function handler;
 
     const struct _af_router * router;
 
@@ -40,7 +40,7 @@ af_block *af_block_alloc(size_t input_size, size_t output_dim);
 void af_block_set_params(af_block * const block, const void * params);
 
 void af_block_set_handler(af_block * const block,
-						  const af_block_handler handler);
+						  const af_block_function handler);
 
 void af_block_set_router(af_block * const block,
 						 const struct _af_router * const router);

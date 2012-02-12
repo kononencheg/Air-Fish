@@ -121,6 +121,10 @@ void af_state_space_set_output_matrix(af_state_space * const state_space,
 	populate_matrix(state_space->output_matrix, data);
 }
 
+void af_state_space_reset(af_state_space* state_space) {
+	gsl_vector_set_all(state_space->state_vector, 0);
+}
+
 void af_state_space_free(af_state_space* state_space) {
 	gsl_matrix_free(state_space->state_matrix);
 	gsl_matrix_free(state_space->input_matrix);

@@ -1,9 +1,3 @@
-/**
- * Air-Fish
- *
- * @file af_block_step_response.h
- * @author Kononenko Sergey <kononenheg@gmail.com>
- */
 
 #ifndef AF_BLOCK_RESPONSE_STEP_H_
 #define AF_BLOCK_RESPONSE_STEP_H_

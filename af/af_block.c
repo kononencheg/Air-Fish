@@ -32,7 +32,7 @@ af_block *af_block_alloc(size_t input_size, size_t output_dim) {
 }
 
 void af_block_set_handler(af_block * const block,
-						  const af_block_handler handler) {
+						  const af_block_function handler) {
 	block->handler = handler;
 }
 

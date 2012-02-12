@@ -33,7 +33,7 @@ af_step_response *af_step_response_alloc(size_t size, double error_ratio) {
 }
 
 void af_step_response_add_value(af_step_response * response,
-								double time, double value) {
+								const double time, double value) {
 	double derivative, last_value, last_time;
 	size_t i = response->length;
 
@@ -88,23 +88,34 @@ double af_step_response_get_settling_time(af_step_response * response) {
 	double error_band_min = response->steady_value - error_band_radius;
 
 	size_t i = 0;
-	while (i < response->length) {
-		if (error_band_min < response->value[i] &&
-			response->value[i] < error_band_max) {
-			if (settling_time == GSL_NEGINF) {
-				settling_time = response->time[i];
 
+	if (error_band_max < response->max_value) {
+
+		while (i < response->length) {
+			if (error_band_min < response->value[i] &&
+				response->value[i] < error_band_max) {
+				if (settling_time == GSL_NEGINF) {
+					settling_time = response->time[i];
+				}
+			} else {
+				if (settling_time != GSL_NEGINF) {
+					settling_time = GSL_NEGINF;
+				}
 			}
-		} else {
-			if (settling_time != GSL_NEGINF) {
-				settling_time = GSL_NEGINF;
-			}
+
+			i++;
 		}
-
-		i++;
 	}
 
 	return settling_time;
+}
+
+void af_step_response_reset(af_step_response * response) {
+	response->length = 0;
+	response->steady_value = 0;
+	response->last_peak_value = GSL_NEGINF;
+	response->max_value = GSL_NEGINF;
+	response->derivative = GSL_POSINF;
 }
 
 void af_step_response_free(af_step_response * response) {

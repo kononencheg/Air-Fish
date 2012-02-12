@@ -1,107 +1,299 @@
-/**
- * Air-Fish
- *
- * @file main.c
- * @author Kononenko Sergey <kononenheg@gmail.com>
- */
 
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <time.h>
+
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_rng.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_block.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv.h>
 
+#include "af/af_block.h"
+#include "af/af_block_sum.h"
+#include "af/af_block_mux.h"
+#include "af/af_block_step.h"
+#include "af/af_block_gain.h"
+#include "af/af_block_print.h"
+#include "af/af_block_demux.h"
+#include "af/af_block_state_space.h"
+#include "af/af_block_step_response.h"
+
+#include "af/af_evolution_algorithm.h"
+#include "af/af_evolution_individual.h"
+#include "af/af_evolution_population.h"
+
+
 #include "af/af_router.h"
 
 #include "af/af_state_space.h"
 #include "af/af_step_response.h"
 
-#include "af/af_block.h"
-#include "af/af_block_step.h"
-#include "af/af_block_feedback.h"
-#include "af/af_block_state_space.h"
-#include "af/af_block_step_response.h"
+#define POPULATION_SIZE (1000)
 
-#define TIME (20)
-#define STEP (0.01)
+#define SIMULATION_TIME_STEP (0.01)
+#define SIMULATION_TIME (10)
 
-af_block *create_print_block(af_router *router);
+#define EVOLUTION_TIME (240)
+
+#define STATE_DIM (2)
+
+void fill_router();
+
+af_evolution_population * init_population();
+
+void access_fitness(af_evolution_individual * individual);
+af_evolution_individual * select_parent(af_evolution_population * parents);
+af_evolution_individual * crossover(af_evolution_individual * man,
+									af_evolution_individual * woman);
+
+void mutate(af_evolution_individual * individual);
+
+gsl_rng * rnd_generator;
+
+af_router * router;
+
+af_state_space * state_space;
+
+af_block * control_gain_block;
+af_block * print_block;
+
+af_step_response *response;
 
 int main() {
-	const double A[] = { 0, -5,
-						 1, -10 };
+	af_evolution_individual * best;
 
-	const double B[] = { 1,
-				   	   	 1 };
+	gsl_rng_env_setup();
 
-	const double C[] = { 0, 1 };
+	rnd_generator = gsl_rng_alloc(gsl_rng_taus);
+
+	gsl_rng_set(rnd_generator, time(NULL));
+
+	fill_router();
+
+	af_evolution_algorithm * algorithm =
+			af_evolution_algorithm_alloc(EVOLUTION_TIME);
+
+	af_evolution_algorithm_set_init_function(algorithm, init_population);
+	af_evolution_algorithm_set_fitness_function(algorithm, access_fitness);
+	af_evolution_algorithm_set_select_function(algorithm, select_parent);
+	af_evolution_algorithm_set_crossover_function(algorithm, crossover);
+	af_evolution_algorithm_set_mutate_function(algorithm, mutate);
+
+	best = af_evolution_algorithm_process(algorithm);
+
+	af_router_add_block(router, print_block);
+
+	af_step_response_reset(response);
+	af_state_space_reset(state_space);
+
+	//af_block_set_params(control_gain_block, best->genotype);
+	//af_router_process(router, SIMULATION_TIME);
+
+	printf("T: %f\n", af_step_response_get_settling_time(response));
+	printf("K: [ %f, %f ]\n", best->genotype[0], best->genotype[1]);
+
+	return EXIT_SUCCESS;
+}
+
+void mutate(af_evolution_individual * individual) {
+	double gene;
+
+	size_t i = 0;
+	while (i < individual->genotype_size) {
+		while (individual->genotype[i] > 300 ||
+			   individual->genotype[i] < -300) {
+			individual->genotype[i] = individual->genotype[i] *
+							(gsl_rng_uniform(rnd_generator) * 0.2 + 0.9);
+		}
+
+		i++;
+	}
+}
+
+af_evolution_individual * crossover(af_evolution_individual * man,
+									af_evolution_individual * woman) {
+
+	double * genotype = (double *) malloc(man->genotype_size * sizeof(double));
+
+	size_t i = 0;
+	while (i < man->genotype_size) {
+		if (gsl_rng_uniform(rnd_generator) < 0.5) {
+			genotype[i] = man->genotype[i];
+		} else {
+			genotype[i] = woman->genotype[i];
+		}
+
+		i++;
+	}
+
+	return af_evolution_individual_alloc(genotype, man->genotype_size);
+}
+
+af_evolution_individual * select_parent(af_evolution_population * parents) {
+	af_evolution_individual * best = NULL;
+	double * range_list = (double *) malloc(parents->size * sizeof(double));
+	double range = 0, selection_range;
+	size_t i = 0, size = parents->size;
+
+	while (i < parents->size) {
+		range_list[i] = range;
+		range += parents->individuals[i]->fitness;
+		i++;
+	}
+
+	selection_range = (range * gsl_rng_uniform(rnd_generator));
+
+	i = 0, size = parents->size - 1;
+	while (i < size) {
+		if (range_list[i + 1] > selection_range) {
+			best =  parents->individuals[i];
+			break;
+		}
+
+		i++;
+	}
+
+	if (best == NULL) {
+		best =  parents->individuals[i];
+	}
+
+	return best;
+}
+
+void access_fitness(af_evolution_individual * individual) {
+	af_block_set_params(control_gain_block, individual->genotype);
+	af_router_process(router, SIMULATION_TIME);
+
+	individual->fitness = (0.001) +
+			(1 / af_step_response_get_settling_time(response));
+
+	af_step_response_reset(response);
+	af_state_space_reset(state_space);
+
+	printf("F: %f\t", individual->fitness);
+	printf("K: [ %f, %f ]\n",
+			individual->genotype[0],
+			individual->genotype[1]
+	);
+}
+
+af_evolution_population * init_population() {
+	af_evolution_population * population =
+			af_evolution_population_alloc(POPULATION_SIZE);
+
+	double * genotype;
+	size_t i, j;
+
+	i = 0;
+	while (i < population->size) {
+		genotype = (double *) malloc(STATE_DIM * sizeof(double));
+
+		j = 0;
+		while (j < STATE_DIM) {
+			genotype[j] = gsl_rng_uniform(rnd_generator) * 600 - 300;
+			j++;
+		}
+
+		population->individuals[i] =
+				af_evolution_individual_alloc(genotype, STATE_DIM);
+
+		i++;
+	}
+
+	return population;
+}
+
+void fill_router() {
+
+	const double A[] = { -0.45, 1,
+						 -0.05, 0 };
+
+	const double B[] = { 0.0,
+						 0.1 };
+
+	const double C[] = { 1, 0,
+						 0, 1 };
 
 	double X0[] = { 0, 0 };
 
-	af_router *router = af_router_alloc(STEP, 0);
+	response =
+			af_step_response_alloc(SIMULATION_TIME/SIMULATION_TIME_STEP, 0.01);
 
-	af_state_space *state_space = af_state_space_alloc(2, 1, 1);
+	router = af_router_alloc(SIMULATION_TIME_STEP);
+
+	state_space = af_state_space_alloc(STATE_DIM, 1, 2);
 
 	af_state_space_set_state_matrix(state_space, A);
 	af_state_space_set_input_matrix(state_space, B);
 	af_state_space_set_output_matrix(state_space, C);
 	af_state_space_set_state_vector(state_space, X0);
 
-	af_step_response *response = af_step_response_alloc(TIME/STEP, 0.01);
+	// Blocks
 
-	af_block *state_space_block = af_block_state_space_alloc(router, state_space);
-	af_block *feedback_block 	= af_block_feedback_alloc(router, 2);
-	af_block *step_block 		= af_block_step_alloc(router, 0, 1);
-	af_block *response_block 	= af_block_step_response_alloc(router, response);
-	af_block *print_block 		= create_print_block(router);
+	af_block * step_block 		 = af_block_step_alloc(router, 0, 1);
 
-	af_block_add_source_at(feedback_block, step_block, 0);
-	af_block_add_source_at(feedback_block, state_space_block, 1);
+	af_block * state_space_block = af_block_state_space_alloc(router, state_space);
+	af_block * inverse_block 	 = af_block_inverse_alloc(router, 2);
 
-	af_block_add_source_at(state_space_block, feedback_block, 0);
+	af_block * demux_block_y 	= af_block_demux_alloc(router, 0, 1);
+	af_block * demux_block_x 	= af_block_demux_alloc(router, 1, 1);
+
+	af_block * input_sum_block = af_block_sum_alloc(router, 2);
+
+	af_block * control_mux_block  	 = af_block_mux_alloc(router, 2, 2);
+
+
+	af_block * control_demux_block_y = af_block_demux_alloc(router, 0, 1);
+	af_block * control_demux_block_x = af_block_demux_alloc(router, 1, 1);
+	af_block * control_sum_block 	 = af_block_sum_alloc(router, 2);
+
+	af_block * response_block 	= af_block_step_response_alloc(router, response);
+
+	control_gain_block = af_block_gain_alloc(router, 2, NULL);
+	print_block = af_block_print_alloc(router);
+
+	// Bindings
+
+	af_block_add_source_at(state_space_block, control_sum_block, 0);
+
+	af_block_add_source_at(control_sum_block, control_demux_block_y, 0);
+	af_block_add_source_at(control_sum_block, control_demux_block_x, 1);
+
+	af_block_add_source_at(control_demux_block_y, control_gain_block, 0);
+	af_block_add_source_at(control_demux_block_x, control_gain_block, 0);
+
+	af_block_add_source_at(control_gain_block, control_mux_block, 0);
+
+	af_block_add_source_at(control_mux_block, input_sum_block, 0);
+	af_block_add_source_at(control_mux_block, demux_block_x, 1);
+
+	af_block_add_source_at(input_sum_block, demux_block_y, 0);
+	af_block_add_source_at(input_sum_block, step_block, 1);
+
+	af_block_add_source_at(demux_block_y, inverse_block, 0);
+	af_block_add_source_at(demux_block_x, inverse_block, 0);
+
+	af_block_add_source_at(inverse_block, state_space_block, 0);
 
 	af_block_add_source_at(print_block, state_space_block, 0);
 	af_block_add_source_at(response_block, state_space_block, 0);
 
+	// Process
+
 	af_router_add_block(router, step_block);
-	af_router_add_block(router, feedback_block);
 	af_router_add_block(router, state_space_block);
-	af_router_add_block(router, print_block);
+	af_router_add_block(router, inverse_block);
+	af_router_add_block(router, demux_block_y);
+	af_router_add_block(router, demux_block_x);
+	af_router_add_block(router, input_sum_block);
+	af_router_add_block(router, control_mux_block);
+	af_router_add_block(router, control_gain_block);
+	af_router_add_block(router, control_demux_block_y);
+	af_router_add_block(router, control_demux_block_x);
+	af_router_add_block(router, control_sum_block);
 	af_router_add_block(router, response_block);
-
-	af_router_process(router, TIME);
-
-	printf("%f\n", af_step_response_get_steady_value(response));
-	printf("%f\n", af_step_response_get_overshoot(response));
-	printf("%f\n", af_step_response_get_settling_time(response));
-
-	return EXIT_SUCCESS;
-}
-
-int print_fucntion(af_block *block) {
-	const gsl_vector * input = af_block_input_get_vector_at(block->input, 0);
-	size_t i = 0;
-
-	printf("[time]\t%f\t[out] ", block->router->time);
-
-	while (i < input->size) {
-		printf("%d: %f\t", i, gsl_vector_get(input, i));
-		i++;
-	}
-
-	printf("\n");
-
-	return GSL_SUCCESS;
-}
-
-af_block *create_print_block(af_router *router) {
-	af_block *block = af_block_alloc(1, 0);
-
-	af_block_set_handler(block, print_fucntion);
-	af_block_set_router(block, router);
-
-	return block;
 }
