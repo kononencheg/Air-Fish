@@ -32,12 +32,12 @@
 #include "af/af_state_space.h"
 #include "af/af_step_response.h"
 
-#define POPULATION_SIZE (1000)
+#define POPULATION_SIZE (100)
 
-#define SIMULATION_TIME_STEP (0.01)
-#define SIMULATION_TIME (10)
+#define SIMULATION_TIME_STEP (0.05)
+#define SIMULATION_TIME (20)
 
-#define EVOLUTION_TIME (240)
+#define EVOLUTION_TIME (3*60)
 
 #define STATE_DIM (2)
 
@@ -90,24 +90,30 @@ int main() {
 	af_step_response_reset(response);
 	af_state_space_reset(state_space);
 
-	//af_block_set_params(control_gain_block, best->genotype);
-	//af_router_process(router, SIMULATION_TIME);
 
+	af_block_set_params(control_gain_block, best->genotype);
+	af_router_process(router, SIMULATION_TIME);
+
+	best->fitness = (1 / af_step_response_get_settling_time(response));
+
+	printf("F: %f\n", best->fitness);
 	printf("T: %f\n", af_step_response_get_settling_time(response));
-	printf("K: [ %f, %f ]\n", best->genotype[0], best->genotype[1]);
+	printf("K: [ %f, %f ]\n", best->
+			genotype[0], best->genotype[1]);
 
 	return EXIT_SUCCESS;
 }
 
 void mutate(af_evolution_individual * individual) {
 	double gene;
-
 	size_t i = 0;
+
 	while (i < individual->genotype_size) {
-		while (individual->genotype[i] > 300 ||
-			   individual->genotype[i] < -300) {
-			individual->genotype[i] = individual->genotype[i] *
-							(gsl_rng_uniform(rnd_generator) * 0.2 + 0.9);
+		gene = individual->genotype[i] *
+				(gsl_rng_uniform(rnd_generator) * 0.06 + 0.97);
+
+		if (gene <= 100 && gene >= -100) {
+			individual->genotype[i] = gene;
 		}
 
 		i++;
@@ -141,7 +147,8 @@ af_evolution_individual * select_parent(af_evolution_population * parents) {
 
 	while (i < parents->size) {
 		range_list[i] = range;
-		range += parents->individuals[i]->fitness;
+		range += parents->individuals[i]->fitness *
+				 parents->individuals[i]->fitness;
 		i++;
 	}
 
@@ -161,6 +168,8 @@ af_evolution_individual * select_parent(af_evolution_population * parents) {
 		best =  parents->individuals[i];
 	}
 
+	free(range_list);
+
 	return best;
 }
 
@@ -174,11 +183,11 @@ void access_fitness(af_evolution_individual * individual) {
 	af_step_response_reset(response);
 	af_state_space_reset(state_space);
 
-	printf("F: %f\t", individual->fitness);
+	/*printf("F: %f\t", individual->fitness);
 	printf("K: [ %f, %f ]\n",
 			individual->genotype[0],
 			individual->genotype[1]
-	);
+	);*/
 }
 
 af_evolution_population * init_population() {
@@ -194,7 +203,7 @@ af_evolution_population * init_population() {
 
 		j = 0;
 		while (j < STATE_DIM) {
-			genotype[j] = gsl_rng_uniform(rnd_generator) * 600 - 300;
+			genotype[j] = gsl_rng_uniform(rnd_generator) * 200 - 100;
 			j++;
 		}
 
@@ -209,11 +218,11 @@ af_evolution_population * init_population() {
 
 void fill_router() {
 
-	const double A[] = { -0.45, 1,
-						 -0.05, 0 };
+	const double A[] = {   0,  1,
+						 -15, -5 };
 
-	const double B[] = { 0.0,
-						 0.1 };
+	const double B[] = { 0,
+						 1 };
 
 	const double C[] = { 1, 0,
 						 0, 1 };
@@ -221,7 +230,7 @@ void fill_router() {
 	double X0[] = { 0, 0 };
 
 	response =
-			af_step_response_alloc(SIMULATION_TIME/SIMULATION_TIME_STEP, 0.01);
+			af_step_response_alloc(SIMULATION_TIME/SIMULATION_TIME_STEP, 0.05);
 
 	router = af_router_alloc(SIMULATION_TIME_STEP);
 

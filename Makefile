@@ -4,7 +4,7 @@
 
 CC = clang 
 
-CFLAGS = -g3 -fno-inline -O0
+CFLAGS = -g3 -fno-inline -O3
 LIBS = gsl gslcblas
 
 BUILD_DIR := bin

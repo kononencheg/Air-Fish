@@ -5,10 +5,6 @@
 
 #include "af_evolution_algorithm.h"
 
-void algorithm_iteration(af_evolution_algorithm  * algorithm,
-						 af_evolution_population * parents,
-						 af_evolution_individual ** best, time_t start_time);
-
 af_evolution_algorithm * af_evolution_algorithm_alloc(time_t time) {
 	af_evolution_algorithm * algorithm =
 			(af_evolution_algorithm *) malloc(sizeof(af_evolution_algorithm));
@@ -56,39 +52,39 @@ void af_evolution_algorithm_set_mutate_function
 af_evolution_individual * af_evolution_algorithm_process
 							(af_evolution_algorithm * algorithm) {
 
+	time_t start_time = time(NULL);
+
 	af_evolution_individual * best = NULL;
-
-	algorithm_iteration
-		(algorithm, algorithm->init_function(), &best, time(NULL));
-
-	return best;
-}
-
-void af_evolution_algorithm_free(af_evolution_algorithm * algorithm) {
-	free(algorithm);
-}
-
-void algorithm_iteration(af_evolution_algorithm  * algorithm,
-						 af_evolution_population * parents,
-						 af_evolution_individual ** best, time_t start_time) {
-
-	af_evolution_population * children = NULL;
 	af_evolution_individual * current = NULL;
-	size_t i = 0;
+	af_evolution_population * children = NULL;
+	af_evolution_population * parents = algorithm->init_function();
 
-	while (i < parents->size) {
-		current = parents->individuals[i];
+	size_t i;
 
-		algorithm->fitness_function(current);
+	while (time(NULL) - start_time < algorithm->time) {
+		i = 0;
+		while (i < parents->size) {
+			current = parents->individuals[i];
 
-		if ((*best) == NULL || current->fitness > (*best)->fitness) {
-			(*best) = current;
+			algorithm->fitness_function(current);
+			if (best == NULL || current->fitness > best->fitness) {
+
+				if (best != NULL) {
+					af_evolution_individual_free(best);
+				}
+
+				best = af_evolution_individual_clone(current);
+
+				printf("BEST: %f\t[ %f, %f ]\n",
+					best->fitness,
+					best->genotype[0],
+					best->genotype[1]
+				);
+			}
+
+			i++;
 		}
 
-		i++;
-	}
-
-	if (time(NULL) - start_time < algorithm->time) {
 		children = af_evolution_population_alloc(parents->size);
 
 		i = 0;
@@ -105,6 +101,14 @@ void algorithm_iteration(af_evolution_algorithm  * algorithm,
 
 		af_evolution_population_free(parents);
 
-		algorithm_iteration(algorithm, children, best, start_time);
+		parents = children;
 	}
+
+	af_evolution_population_free(children);
+
+	return best;
+}
+
+void af_evolution_algorithm_free(af_evolution_algorithm * algorithm) {
+	free(algorithm);
 }
