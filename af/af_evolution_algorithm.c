@@ -60,6 +60,7 @@ af_evolution_individual * af_evolution_algorithm_process
 	af_evolution_population * parents = algorithm->init_function();
 
 	size_t i;
+	
 
 	while (time(NULL) - start_time < algorithm->time) {
 		i = 0;
@@ -75,10 +76,13 @@ af_evolution_individual * af_evolution_algorithm_process
 
 				best = af_evolution_individual_clone(current);
 
-				printf("BEST: %f\t[ %f, %f ]\n",
+				printf("BEST: %f\t[ %f, %f, %f, %f ]\tTIME: %lds\n",
 					best->fitness,
 					best->genotype[0],
-					best->genotype[1]
+					best->genotype[1],
+					best->genotype[2],
+					best->genotype[3],
+					(time(NULL) - start_time)
 				);
 			}
 

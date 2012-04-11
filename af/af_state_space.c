@@ -72,6 +72,7 @@ int af_state_space_function(double time,
 							double dfdt[],
 							void *params) {
 
+	size_t i = 0;
 	af_state_space *state_space = (af_state_space *) params;
 	gsl_vector *temp = gsl_vector_alloc(state_space->state_matrix->size1);
 
@@ -87,9 +88,12 @@ int af_state_space_function(double time,
 				   state_space->state_matrix,
 				   state_space->state_vector,
 				   1.0, temp);
-
-	dfdt[0] = gsl_vector_get(temp, 0);
-	dfdt[1] = gsl_vector_get(temp, 1);
+	
+	while (i < temp->size) {
+		dfdt[i] = gsl_vector_get(temp, i);
+		
+		i++;
+	}
 
 	gsl_vector_free(temp);
 
